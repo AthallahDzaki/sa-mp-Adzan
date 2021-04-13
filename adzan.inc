@@ -19,7 +19,7 @@
 	#error Adzan Need Pawn Request Included Download : github.com/Southclaws/pawn-requests
 #endif
 
-//=== Variable Storage ===//
+//=== VAriable Storage ===//
 
 enum TIME
 {
@@ -27,7 +27,7 @@ enum TIME
     DUHUR,  // 1
     ASHAR,  // 2
     MAGHRIB,  // 3
-	ISHA,  // 4
+    ISHA,  // 4
 }
 new WaktuSholat[TIME];
 new m[6];
@@ -58,7 +58,7 @@ forward F33XS(Request:ae, E_HTTP_STATUS:sttxz, Node:as);
 public F33XS(Request:ae, E_HTTP_STATUS:sttxz, Node:as) {
 	if(sttxz != HTTP_STATUS_OK)
 		return print("Website Mighty Down Right Now");
-    JsonGetInt(as, "521", WaktuSholat[SUBUH]);
+	JsonGetInt(as, "521", WaktuSholat[SUBUH]);
 	JsonGetInt(as, "AE", WaktuSholat[DUHUR]);
 	JsonGetInt(as, "M3", WaktuSholat[ASHAR]);
 	JsonGetInt(as, "EC2", WaktuSholat[MAGHRIB]);
@@ -87,7 +87,7 @@ public OnGameModeInit()
 
 //=== End of Internal Function ===//
 
-//=== Global Function ===//
+//=== Native And Definition ===//
 
 stock GetSubuhTime() return WaktuSholat[SUBUH];
 
