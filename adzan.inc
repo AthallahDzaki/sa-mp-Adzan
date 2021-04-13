@@ -1,118 +1,102 @@
-Float:degToRad(Float:degree)
+/****************************************************************
+ *              Adzan v1.0b              						*
+ *                                                              *
+ *        (c) Copyright 2021, SAMPINDO x ANGGA                  *
+ *              This file is provided as is.                    *
+ *                                                              *
+ ****************************************************************/                                                                                                                                                                                         
+
+#if defined _adzan_included
+  #endinput
+#endif
+#define _adzan_included
+
+#if !defined _requests_included
+	#tryinclude "requests"
+#endif
+
+#if !defined _requests_included
+	#error Adzan Need Pawn Request Included Download : github.com/Southclaws/pawn-requests
+#endif
+
+//=== Variable Storage ===//
+
+enum TIME
 {
-    return ((3.1415926 / 180) * degree);
+    SUBUH,  // 0
+    DUHUR,  // 1
+    ASHAR,  // 2
+    MAGHRIB,  // 3
+	ISHA,  // 4
 }
- 
-//convert Radian to Degree
-Float:radToDeg(Float:radian)
-{
-    return (radian * (180/3.1415926));
-}
- 
-//make sure a value is between 0 and 360
-Float:moreLess360(Float:value)
-{
-    while(value > 360 || value < 0)
-    {
-        if(value > 360)
-            value -= 360;
- 
-        else if (value <0)
-            value += 360;
-    }
- 
-    return value;
-}
- 
-//make sure a value is between 0 and 24
-Float:moreLess24(Float:value)
-{
-    while(value > 24 || value < 0)
-    {
-        if(value > 24)
-            value -= 24;
- 
-        else if (value <0)
-            value += 24;
-    }
- 
-    return value;
-}
- 
-//convert the Float:number to Hours and Minutes
-stock floatToHrMin(Float: number, hours, minutes)
-{
-    hours = floatround(moreLess24(number), floatround_round);
-    minutes = floatround(moreLess24(number - hours) * 60, floatround_round);
+new WaktuSholat[TIME];
+new m[6];
+
+//=== Internal Function ===//
+
+new RequestsClient:client;
+
+static AdzanInit() {
+	m[0] = 65, m[1] = 78, m[2] = 71, m[3] = 71, m[4] = 65, m[5] = 0;
+    client = RequestsClient("https://angular211-athallahdzaki.vercel.app/", RequestHeaders("Mighty", m));
+	printf("Adzan Time By %s", m);
+	DO522();
 }
 
-new Float:fajrTwilight, Float:ishaTwilight,
-                     Float:fajrTime, Float:sunRiseTime, Float:zuhrTime,
-                     Float:asrTime, Float:maghribTime, Float:ishaTime;
- 
-stock calcPrayerTimes(year, month, day,
-                     Float:longitude, Float:latitude, timeZone)
+static DO522()
 {
-    new Float:D = (367 * year) - ((year + (int)((month + 9) / 12)) * 7 / 4) + (((int)(275 * month / 9)) + day - 730531.5);
- 
-    new Float:L = 280.461 + 0.9856474 * D;
-    L = moreLess360(L);
- 
-    new Float:M = 357.528 + (0.9856003) * D;
-    M = moreLess360(M);
- 
-    new Float:Lambda = L + 1.915 * asin(degToRad(M)) + 0.02 * aasin(degToRad(2 * M));
-    Lambda = moreLess360(Lambda);
- 
-    new Float:Obliquity = 23.439 - 0.0000004 * D;
-    new Float:Alpha = radToDeg(atan((acos(degToRad(Obliquity)) * atan(degToRad(Lambda)))));
-    Alpha = moreLess360(Alpha);
- 
-    Alpha = Alpha - (360 * (int)(Alpha / 360));
-    Alpha = Alpha + 90 * (floatround(Lambda / 90, floatround_round) - floatround(Alpha / 90, floatround_round));
- 
-    new Float:ST = 100.46 + 0.985647352 * D;
-    new Float:Dec = radToDeg(aasin(asin(degToRad(Obliquity)) * asin(degToRad(Lambda))));
-    new Float:Durinal_Arc = radToDeg(acos((asin(degToRad(-0.8333)) - asin(degToRad(Dec)) * asin(degToRad(latitude))) / (acos(degToRad(Dec)) * acos(degToRad(latitude)))));
- 
-    new Float:Noon = Alpha - ST;
-    Noon = moreLess360(Noon);
- 
- 
-    new Float:UT_Noon = Noon - longitude;
- 
- 
-    ////////////////////////////////////////////
-    // Calculating Prayer Times Arcs & Times //
-    //////////////////////////////////////////
- 
-    // 2) Zuhr Time [Local noon]
-    zuhrTime = UT_Noon / 15 + timeZone;
- 
-    // Asr Hanafi
-    //Float:Asr_Alt =radToDeg(atan(2 + tan(degToRad(abs(latitude - Dec)))));
- 
-    // Asr Shafii
-    new Float:Asr_Alt = radToDeg(atan(1 + tan(degToRad(abs(latitude - Dec)))));
-    new Float:Asr_Arc = radToDeg(acos((asin(degToRad(90 - Asr_Alt)) - asin(degToRad(Dec)) * asin(degToRad(latitude))) / (acos(degToRad(Dec)) * acos(degToRad(latitude)))));
-    Asr_Arc = Asr_Arc / 15;
-    // 3) Asr Time
-    asrTime = zuhrTime + Asr_Arc;
- 
-    // 1) Shorouq Time
-    sunRiseTime = zuhrTime - (Durinal_Arc / 15);
- 
-    // 4) Maghrib Time
-    maghribTime = zuhrTime + (Durinal_Arc / 15);
- 
- 
-    Float:Esha_Arc = radToDeg(acos((asin(degToRad(ishaTwilight)) - asin(degToRad(Dec)) * asin(degToRad(latitude))) / (acos(degToRad(Dec)) * acos(degToRad(latitude)))));
-    // 5) Isha Time
-    ishaTime = zuhrTime + (Esha_Arc / 15);
- 
-    // 0) Fajr Time
-    Float:Fajr_Arc = radToDeg(acos((asin(degToRad(fajrTwilight)) - asin(degToRad(Dec)) * asin(degToRad(latitude))) / (acos(degToRad(Dec)) * acos(degToRad(latitude)))));
-    fajrTime = zuhrTime - (Fajr_Arc / 15);
- 
-    return;
+	if(RequestJSON(
+		client,
+		"",
+		HTTP_METHOD_GET,
+		"F33XS",
+		.headers = RequestHeaders()
+	)) return 1;
+	return 0;
 }
+forward F33XS(Request:ae, E_HTTP_STATUS:sttxz, Node:as);
+public F33XS(Request:ae, E_HTTP_STATUS:sttxz, Node:as) {
+	if(sttxz != HTTP_STATUS_OK)
+		return print("Website Mighty Down Right Now");
+    JsonGetInt(as, "521", WaktuSholat[SUBUH]);
+	JsonGetInt(as, "AE", WaktuSholat[DUHUR]);
+	JsonGetInt(as, "M3", WaktuSholat[ASHAR]);
+	JsonGetInt(as, "EC2", WaktuSholat[MAGHRIB]);
+	JsonGetInt(as, "AX", WaktuSholat[ISHA]);
+	return 1;
+}
+
+public OnGameModeInit()
+{
+	AdzanInit();
+	#if defined Adzan_OnGameModeInit
+		return Adzan_OnGameModeInit();
+	#else
+	    return 1;
+	#endif
+}
+#if defined _ALS_OnGameModeInit
+    #undef OnGameModeInit
+#else
+    #define _ALS_OnGameModeInit
+#endif
+#if defined Adzan_OnGameModeInit
+	forward Adzan_OnGameModeInit();
+#endif
+#define OnGameModeInit Adzan_OnGameModeInit
+
+//=== End of Internal Function ===//
+
+//=== Global Function ===//
+
+stock GetSubuhTime() return WaktuSholat[SUBUH];
+
+stock GetDuhurTime() return WaktuSholat[DUHUR];
+
+stock GetAsharTime() return WaktuSholat[ASHAR];
+
+stock GetMaghribTime() return WaktuSholat[MAGHRIB];
+
+stock GetIsyaTime() return WaktuSholat[ISHA];
+
+stock GetPrayTime() return DO522();
